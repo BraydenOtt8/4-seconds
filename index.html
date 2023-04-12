@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>4 seconds</title>
+  <style>
+    body {
+      background-color: #f2f2f2;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    #startBtn {
+      display: block;
+      margin: 0 auto;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 40px;
+      line-height: 200px;
+      cursor: pointer;
+    }
+
+    #result {
+      font-size: 40px;
+      margin-top: 50px;
+    }
+
+    #moreStatsBtn {
+      margin-top: 30px;
+      font-size: 20px;
+      background-color: #008CBA;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+</head>
+<body>
+<button id="startBtn">Start</button>
+<div id="result"></div>
+<button id="moreStatsBtn">More Statistics</button>
+<div id="graph" style="height: 250px;"></div>
+<div id="table"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+
+<script>
+  var startTime;
+  var stopTime;
+  var timerId;
+  var attempts = [];
+
+  function startTimer() {
+    $('#startBtn').text('Stop').attr('id', 'stopBtn');
+    startTime = new Date().getTime();
+    timerId = setTimeout(showResult, 20000);
+  }
+
+  function stopTimer() {
+    $('#stopBtn').text('Start').attr('id', 'startBtn');
+    clearTimeout(timerId);
+    stopTime = new Date().getTime();
+    var diff = (stopTime - startTime) / 1000;
+    var color;
+    if (diff == 4.0) {
+      color = '#4CAF50'; // green
+    } else if (diff >= 3.8 && diff <= 4.2) {
+      color = '#008CBA'; // blue
+    } else if (diff >= 3.5 && diff <= 4.5) {
+      color = '#FFC107'; // yellow
+    } else {
+      color = '#F44336'; // red
+    }
+    $('#result').css('background-color', color).text(diff.toFixed(2) + 's');
+    attempts.push({
+      'attemptNumber': attempts.length + 1,
+      'startTime': startTime,
+      'stopTime': stopTime,
+      'TimeTaken': diff.toFixed(2)
+    });
+  }
+
+  function showResult() {
+    stopTimer();
+    $('#moreStatsBtn').show();
+    updateTable();
+    updateGraph();
+  }
+
+  function updateTable() {
+    var table = '<table><tr><th>Attempt</th><th>Start Time</th><th>Stop Time</th><th>Duration</th><th>Color</th></tr>';
+    attempts.forEach(function(attempt) {
+      table += '<tr><td>' + attempt.attemptNumber + '</td><td>' + new Date(attempt.startTime).toLocaleString() + '</td><td>' + new Date(attempt.stopTime).toLocaleString() + '</td><td>' + attempt.duration + 's</td><td style="background-color:' + attempt.color + ';"></td></tr>';
+    });
+    table += '</table>';
+    $('#table').html(table);
+  }
+
+  function updateGraph() {
+    var data = [];
+    attempts.forEach(function(attempt) {
+      data.push({
+        x: attempt.attemptNumber,
+        y: parseFloat(attempt.duration)
+      });
+    });
+    new Morris.Line({
+      element: 'graph',
+      data: data,
+      xkey: 'x',
+      ykeys: ['y'],
+      labels: ['Duration'],
+      ymin: 'auto',
+      ymax: 'auto',
+      parseTime: false,
+      postUnits: 's'
+    });
+  }
+
+  $('#startBtn').click(function() {
+    if ($(this).attr('id') == 'startBtn') {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  });
+
+  $('#moreStatsBtn').click(function() {
+    updateTable();
+    updateGraph();
+  });
+</script>
+
+</body>
+</html>
